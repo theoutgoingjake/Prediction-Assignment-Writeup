@@ -1,0 +1,85 @@
+---
+title: "Prediction Assignment Writeup"
+author: "N Vinod Kumar"
+date: "15/08/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Data Loading
+```{r}
+library(caret)
+library(randomForest)
+setwd("\\Coursera\\MachineLearning\\Project")
+training <- read.csv("pml-training.csv",header = TRUE)
+testing <- read.csv("pml-testing.csv",header = TRUE)
+```
+
+### Selecting only the Required Columns
+The goal for the prediction is use to the data from accelerometers on the belt, forearm, arm, and dumbbell. We select only these columns from the training data,
+```{r}
+training <- training[8:160]
+```
+
+### Removing the columns where all are NA
+```{r}
+training <- training[,which(unlist(lapply(training, function(x) all(!is.na(x)))))]
+```
+
+### Removing the columns where all are #DIV/0!
+```{r}
+training <- training[,which(unlist(lapply(training, function(x) all(!x=="#DIV/0!"))))]
+```
+
+### Removing highly correlated columns
+```{r}
+cordata <- cor(training[c(1:52)] ,use="complete.obs")
+findCorrelation(cordata, cutoff = 0.90, verbose = TRUE, names=TRUE)
+```
+
+
+```{r}
+cols <- findCorrelation(cordata, cutoff = 0.90, verbose = TRUE, names=TRUE) 
+training <- training[,!(names(training) %in% cols)]
+```
+
+### Building Model with Regression tree
+```{r}
+model1 <- train(classe ~ ., method="rpart", data=training)
+model1
+```
+
+## Model Prediction
+```{r}
+pred1 <- predict(model1, testing)
+pred1
+```
+
+### Building Model with Random Forests
+```{r}
+# model2 <- train(classe ~ ., method="ranger", data=train)
+```
+Growing trees.. Progress: 93%. Estimated remaining time: 2 seconds.
+Growing trees.. Progress: 80%. Estimated remaining time: 7 seconds.
+Growing trees.. Progress: 94%. Estimated remaining time: 1 seconds.
+Growing trees.. Progress: 100%. Estimated remaining time: 0 seconds.
+Growing trees.. Progress: 99%. Estimated remaining time: 0 seconds.
+Growing trees.. Progress: 93%. Estimated remaining time: 2 seconds.
+Growing trees.. Progress: 98%. Estimated remaining time: 0 seconds.
+Growing trees.. Progress: 98%. Estimated remaining time: 0 seconds.
+Growing trees.. Progress: 100%. Estimated remaining time: 0 seconds.
+Growing trees.. Progress: 100%. Estimated remaining time: 0 seconds.
+Growing trees.. Progress: 98%. Estimated remaining time: 0 seconds.
+Growing trees.. Progress: 98%. Estimated remaining time: 0 seconds.
+
+
+### Testing the model
+```{r}
+# pred2 <- predict(model2, testing)
+# pred2
+```
+[1] B A B A A E D B A A B C B A E E A B B B
+Levels: A B C D E
